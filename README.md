@@ -60,3 +60,18 @@ git branch --set-upstream {local branch} origin/{remote branch}
 ```shell
 git config --list
 ```
+
+### Branch usage process
+
++-----------+ \
+\|&ensp;&ensp;&ensp;main &ensp; &ensp;\| \
++-----------+ \
+&ensp;&ensp;&ensp;&ensp;&ensp;⬆ \
++-----------+ \
+\|&ensp;&ensp;&ensp;&ensp;dev &ensp; &ensp;\| \
++-----------+ \
+&ensp;&ensp;&ensp;&ensp;&ensp;⬆ \
++-----------+ \
+\|&ensp;&ensp;branch &ensp;\| \
++-----------+ 
+
