@@ -1,0 +1,5 @@
+.idea/*
+!.vsocde/settings.json
+.vsocde/*
+build/*
+
