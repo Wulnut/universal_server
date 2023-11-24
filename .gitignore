@@ -2,4 +2,6 @@
 !.vsocde/settings.json
 .vsocde/*
 build/*
+cmake-build-debug/
+gdb.log
 
