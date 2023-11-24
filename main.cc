@@ -1,57 +1,44 @@
 /********************************************************************************
-* @author: Wulnut
-* @email: carepdime@gmail.com
-* @date: 2023/11/16 11:35
-* @version: 1.0
-* @description: 
-********************************************************************************/
+ * @author: Wulnut
+ * @email: carepdime@gmail.com
+ * @date: 2023/11/16 11:35
+ * @version: 1.0
+ * @description:
+ ********************************************************************************/
+#include "include/us_server.h"
+#include <csignal>
+#include <iostream>
 
-#include <unistd.h>
-#include <pthread.h>
-#include <sys/wait.h>
-#include <stdio.h>
-#include <stdlib.h>
+using namespace std;
 
-pthread_mutex_t mutex;
-
-void *another (void *arg)
+void reset_handler(int)
 {
-    printf("In child thread, lock the mutex\n");
-
-    pthread_mutex_lock(&mutex);
-    sleep(5);
-    pthread_mutex_unlock(&mutex);
+    // TODO service reset
+    exit(0);
 }
 
-int main() {
-    pthread_mutex_init(&mutex, NULL);
+int main(int argc, char** argv)
+{
+    char*    ip   = NULL;
+    uint16_t port = 0;
 
-    pthread_t id;
-
-    pthread_create(&id, NULL, another, NULL);
-
-    sleep(1);
-
-    int pid = fork();
-
-    if (pid < 0) {
-        pthread_join(id, NULL);
-        pthread_mutex_destroy(&mutex);
-
-        return 1;
-    } else if (pid == 0) {
-        printf("I am in the child, want to get the lock\n");
-
-        pthread_mutex_lock(&mutex);
-        printf("I can not run to here, oops...\n");
-        pthread_mutex_unlock(&mutex);
-        exit(0);
-    } else {
-        wait(NULL);
+    if (argc < 3) {
+        printf("Command invalid! example: ./us_server 127.0.0.1 6000\n");
+        exit(-1);
     }
 
-    pthread_join(id, NULL);
-    pthread_mutex_destroy(&mutex);
+    ip   = argv[1];
+    port = atoi(argv[2]);
+
+    signal(SIGINT, reset_handler);
+    Logger::setLogLevel(Logger::DEBUG);
+
+    EventLoop   loop;
+    InetAddress addr(ip, port);
+    us_server   server(&loop, addr, "us_server");
+
+    server.start();
+    loop.loop();
 
     return 0;
 }
