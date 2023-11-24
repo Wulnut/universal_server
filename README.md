@@ -75,3 +75,9 @@ git config --list
 \|&ensp;&ensp;branch &ensp;\| \
 +-----------+ 
 
+## build
+
+```shell
+chmod +x 
+./build.sh
+```
