@@ -19,7 +19,7 @@ void reset_handler(int)
 
 int main(int argc, char** argv)
 {
-    char*    ip   = NULL;
+    char*    ip   = nullptr;
     uint16_t port = 0;
 
     if (argc < 3) {
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     }
 
     ip   = argv[1];
-    port = atoi(argv[2]);
+    port = strtol(argv[2], nullptr, 4);
 
     signal(SIGINT, reset_handler);
     Logger::setLogLevel(Logger::DEBUG);
