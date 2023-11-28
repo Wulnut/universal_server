@@ -32,7 +32,7 @@ void us_server::on_connection(const muduo::net::TcpConnectionPtr& conn)
 {
     if (!conn->connected()) {
         // TODO clean up service logic
-        us_service::instance()->clientCloseException(conn);
+        us_service::instance()->client_close_exception(conn);
         conn->shutdown();
     }
 }
@@ -41,10 +41,22 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
                            muduo::Timestamp time)
 {
     string buf = buffer->retrieveAllAsString();
-    json   msg = json::parse(buf);
 
-    LOG_DEBUG << msg.dump();
-    // TODO handle service logic
-    auto msgHandler = us_service::instance()->getHandler(msg["msgId"].get<int>());
-    msgHandler(conn, msg, time);
+    if (!buf.empty()) {
+        json msg = json::parse(buf.c_str(), nullptr, false);
+
+        if (msg.is_discarded()) {
+            LOG_ERROR << "msg is not json, connection close";
+            goto err;
+        }
+        LOG_DEBUG << msg.dump();
+        // TODO handle service logic
+        auto us_handler = us_service::instance()->handler_us_msg(msg["msgId"].get<int>());
+        us_handler(msg, time);
+        // TODO handle send uniformly
+    }
+
+    LOG_ERROR << "Receive message is NULL, connection close";
+err:
+    conn->shutdown();
 }

@@ -6,10 +6,17 @@
  * @description:
  ********************************************************************************/
 #include "include/us_service.h"
+#include "include/common.h"
+
+using namespace muduo;
+using namespace muduo::net;
+using namespace std;
+using namespace std::placeholders;
 
 us_service::us_service()
 {
     LOG_INFO << "Hello World us_service";
+    _us_handlers.insert({CODE_PHOTO_ACK, bind(&us_service::handler_photo_ack, this, _1, _2)});
 }
 
 us_service* us_service::instance()
@@ -18,21 +25,25 @@ us_service* us_service::instance()
     return &service;
 }
 
-MsgHandler us_service::getHandler(int msgId)
+us_handle_t us_service::handler_us_msg(int code)
 {
-    auto it = _msgHandlerMap.find(msgId);
+    auto it = _us_handlers.find(code);
 
-    if (it == _msgHandlerMap.end()) {
-        return [=](const muduo::net::TcpConnectionPtr& conn, json& msg, muduo::Timestamp) {
-            LOG_ERROR << "msId: " << msgId << " can not find handler";
-        };
+    if (it == _us_handlers.end()) {
+        return
+            [=](json& msg, Timestamp) { LOG_ERROR << "code: " << code << " can not find handler"; };
     }
     else {
-        return _msgHandlerMap[msgId];
+        return _us_handlers[code];
     }
 }
 
-void us_service::clientCloseException(const muduo::net::TcpConnectionPtr& conn)
+void us_service::handler_photo_ack(json& msg, muduo::Timestamp)
+{
+    // TODO handler photo
+}
+
+void us_service::client_close_exception(const TcpConnectionPtr& conn)
 {
     // TODO handler exception
 }

@@ -15,24 +15,26 @@
 #include <mutex>
 #include <unordered_map>
 
-using json = nlohmann::json;
-using MsgHandler =
-    std::function<void(const muduo::net::TcpConnectionPtr& conn, json& msg, muduo::Timestamp)>;
+using json        = nlohmann::json;
+using us_handle_t = std::function<void(json& msg, muduo::Timestamp)>;
+
+// TODO handler unified function
 
 class us_service
 {
 public:
     static us_service* instance();
-    MsgHandler         getHandler(int msgId);
-    void               clientCloseException(const muduo::net::TcpConnectionPtr& conn);
+    us_handle_t        handler_us_msg(int code);
+    void               handler_photo_ack(json& msg, muduo::Timestamp);
+    void               client_close_exception(const muduo::net::TcpConnectionPtr& conn);
     void               rest();
 
 private:
     us_service();
 
-    std::unordered_map<int, MsgHandler>                   _msgHandlerMap;
-    std::unordered_map<int, muduo::net::TcpConnectionPtr> _userConnMap;
-    std::mutex                                            _connMutex;
+    std::unordered_map<int, us_handle_t>                  _us_handlers;
+    std::unordered_map<int, muduo::net::TcpConnectionPtr> _us_users_conn_handlers;
+    std::mutex                                            _conn_mutex;
 };
 
 
