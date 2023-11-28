@@ -22,11 +22,12 @@ include_directories(.)
 
 add_executable(universal_server
         main.cc
-        src/us_server.cc
         src/us_service.cc
+        src/us_server.cc
         include/us_server.h
         include/json.hpp
         include/us_service.h
+        include/common.h
 )
 
 TARGET_LINK_LIBRARIES(
