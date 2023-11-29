@@ -20,8 +20,9 @@ typedef enum us_code
 
 typedef enum us_result
 {
-    RESULT_OK          = 0,
-    RESULT_ID_NO_MATCH = -1000,
+    RESULT_OK             = 0,
+    RESULT_ID_NO_MATCH    = -1000,
+    RESULT_CANNOT_EXECUTE = -2000,
 } us_result_t;
 
 #endif   // UNIVERSAL_SERVER_COMMON_H
