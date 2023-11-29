@@ -24,10 +24,12 @@ add_executable(universal_server
         main.cc
         src/us_service.cc
         src/us_server.cc
+        src/inactive_conn_mgr.cc
         include/us_server.h
         include/json.hpp
         include/us_service.h
         include/common.h
+        include/inactive_conn_mgr.h
 )
 
 TARGET_LINK_LIBRARIES(
