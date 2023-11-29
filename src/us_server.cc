@@ -6,7 +6,9 @@
  * @description:
  ********************************************************************************/
 #include "include/us_server.h"
+#include "include/common.h"
 #include "include/json.hpp"
+#include "include/us_service.h"
 #include <iostream>
 
 using namespace std;
@@ -14,9 +16,9 @@ using namespace placeholders;
 using json = nlohmann::json;
 
 us_server::us_server(muduo::net::EventLoop* loop, const muduo::net::InetAddress& listenAddr,
-                     const std::string& nameArg)
+                     int timeout, const std::string& nameArg)
     : _server(loop, listenAddr, nameArg)
-    , _loop(loop)
+    , _manager(loop, timeout)
 {
     _server.setConnectionCallback(bind(&us_server::on_connection, this, _1));
     _server.setMessageCallback(bind(&us_server::on_message, this, _1, _2, _3));
@@ -33,30 +35,46 @@ void us_server::on_connection(const muduo::net::TcpConnectionPtr& conn)
     if (!conn->connected()) {
         // TODO clean up service logic
         us_service::instance()->client_close_exception(conn);
+        _manager.remove_timeout(conn);
         conn->shutdown();
+    }
+    else {
+        _manager.update_timeout(conn);
     }
 }
 
+// -> {code:10006, devId:"xxx-xxx-xxx", time:11234, model:"xxx", game:"xxx", msg:[{name:"xxx",
+// data:"xxx"}]}
+// <- {code:10007, result:0, devId:"xxx-xxx-xxx", time:1234, game:"xxx", msg:[{name:"xxx",
+// data:{index:["x", "y"]}}]}
 void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net::Buffer* buffer,
                            muduo::Timestamp time)
 {
-    string buf = buffer->retrieveAllAsString();
+    string      buf    = buffer->retrieveAllAsString();
+    us_bundle_t bundle = {0, NULL};
 
-    if (!buf.empty()) {
+    if (buf.empty()) {
+        LOG_ERROR << "Receive message is NULL, connection close";
+        conn->shutdown();
+    }
+    else {
         json msg = json::parse(buf.c_str(), nullptr, false);
 
         if (msg.is_discarded()) {
             LOG_ERROR << "msg is not json, connection close";
-            goto err;
+            conn->shutdown();
         }
-        LOG_DEBUG << msg.dump();
-        // TODO handle service logic
-        auto us_handler = us_service::instance()->handler_us_msg(msg["msgId"].get<int>());
-        us_handler(msg, time);
-        // TODO handle send uniformly
-    }
 
-    LOG_ERROR << "Receive message is NULL, connection close";
-err:
-    conn->shutdown();
+        LOG_DEBUG << msg.dump();
+
+        _manager.update_timeout(conn);
+
+        auto us_handler = us_service::instance()->handler_us_msg(msg["code"].get<int>());
+
+        if (us_handler == nullptr) LOG_ERROR << "Unsupported code: " << RESULT_CANNOT_EXECUTE;
+
+        us_handler(msg, bundle, time);
+
+        if (bundle.msg && bundle.code != 0) { conn->send(bundle.msg.dump()); }
+    }
 }

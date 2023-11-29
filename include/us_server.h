@@ -8,7 +8,7 @@
 #ifndef UNIVERSAL_SERVER_US_SERVER_H
 #define UNIVERSAL_SERVER_US_SERVER_H
 
-#include "include/us_service.h"
+#include "include/inactive_conn_mgr.h"
 #include <muduo/base/LogFile.h>
 #include <muduo/base/Logging.h>
 #include <muduo/net/EventLoop.h>
@@ -20,7 +20,7 @@ using namespace muduo::net;
 class us_server
 {
 public:
-    us_server(EventLoop* loop, const InetAddress& listenAddr, const string& nameArg);
+    us_server(EventLoop* loop, const InetAddress& listenAddr, int timeout, const string& nameArg);
 
     void start();
 
@@ -29,8 +29,8 @@ private:
     void on_message(const TcpConnectionPtr&, Buffer*, Timestamp);
 
 private:
-    TcpServer  _server;
-    EventLoop* _loop;
+    TcpServer         _server;
+    inactive_conn_mgr _manager;
 };
 
 #endif   // UNIVERSAL_SERVER_US_SERVER_H
