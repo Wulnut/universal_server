@@ -9,23 +9,28 @@
 #define UNIVERSAL_SERVER_US_SERVICE_H
 
 #include "include/json.hpp"
-#include "muduo/base/Logging.h"
 #include <functional>
+#include <muduo/base/Logging.h>
 #include <muduo/net/TcpServer.h>
 #include <mutex>
 #include <unordered_map>
 
-using json        = nlohmann::json;
-using us_handle_t = std::function<void(json& msg, muduo::Timestamp)>;
+using json = nlohmann::json;
 
-// TODO handler unified function
+typedef struct us_bundle
+{
+    int  code;
+    json msg;
+} us_bundle_t;
+
+using us_handle_t = std::function<void(json&, us_bundle_t&, muduo::Timestamp)>;
 
 class us_service
 {
 public:
     static us_service* instance();
     us_handle_t        handler_us_msg(int code);
-    void               handler_photo_ack(json& msg, muduo::Timestamp);
+    void               handler_photo_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp);
     void               client_close_exception(const muduo::net::TcpConnectionPtr& conn);
     void               rest();
 
