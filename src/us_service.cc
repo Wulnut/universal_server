@@ -15,8 +15,8 @@ using namespace std::placeholders;
 
 us_service::us_service()
 {
-    LOG_DEBUG << "Create us_service";
-    _us_handlers.insert({CODE_PHOTO_ACK, bind(&us_service::handler_photo_ack, this, _1, _2, _3)});
+    _us_handlers.insert({CODE_CONNECT, bind(&us_service::handler_connect_ack, this, _1, _2, _3)});
+    _us_handlers.insert({CODE_PHOTO, bind(&us_service::handler_photo_ack, this, _1, _2, _3)});
 }
 
 us_service* us_service::instance()
@@ -42,6 +42,32 @@ us_handle_t us_service::handler_us_msg(int code)
 void us_service::handler_photo_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp)
 {
     // TODO handler photo
+}
+
+void us_service::handler_connect_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp)
+{
+    int    code = 0;
+    string data;
+
+    try {
+        code = msg["code"].get<int>();
+    }
+    catch (out_of_range& e) {
+        LOG_ERROR << e.what();
+    }
+
+    try {
+        data = msg["data"].get<string>();
+    }
+    catch (out_of_range& e) {
+        LOG_ERROR << e.what();
+    }
+
+    LOG_DEBUG << "code: " << code << " data: " << data;
+
+    bundle.code        = code + 1;
+    bundle.msg["code"] = code + 1;
+    bundle.msg["data"] = data;
 }
 
 void us_service::client_close_exception(const TcpConnectionPtr& conn)

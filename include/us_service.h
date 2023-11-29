@@ -30,9 +30,12 @@ class us_service
 public:
     static us_service* instance();
     us_handle_t        handler_us_msg(int code);
-    void               handler_photo_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp);
-    void               client_close_exception(const muduo::net::TcpConnectionPtr& conn);
-    void               rest();
+
+    void handler_photo_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp);
+    void handler_connect_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp);
+
+    void client_close_exception(const muduo::net::TcpConnectionPtr& conn);
+    void rest();
 
 private:
     us_service();
