@@ -51,7 +51,7 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
                            muduo::Timestamp time)
 {
     string      buf    = buffer->retrieveAllAsString();
-    us_bundle_t bundle = {0, NULL};
+    us_bundle_t bundle = {0, {{"code", 0}}};
 
     if (buf.empty()) {
         LOG_ERROR << "Receive message is NULL, connection close";
@@ -63,18 +63,27 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
         if (msg.is_discarded()) {
             LOG_ERROR << "msg is not json, connection close";
             conn->shutdown();
+            return;
         }
 
-        LOG_DEBUG << msg.dump();
+        LOG_INFO << "(US) <- " << msg.dump();
 
         _manager.update_timeout(conn);
 
         auto us_handler = us_service::instance()->handler_us_msg(msg["code"].get<int>());
 
-        if (us_handler == nullptr) LOG_ERROR << "Unsupported code: " << RESULT_CANNOT_EXECUTE;
+        if (us_handler == nullptr) {
+            LOG_ERROR << "Unsupported code: " << RESULT_CANNOT_EXECUTE;
+            bundle.code        = RESULT_CANNOT_EXECUTE;
+            bundle.msg["code"] = RESULT_CANNOT_EXECUTE;
+        }
+        else {
+            us_handler(msg, bundle, time);
+        }
 
-        us_handler(msg, bundle, time);
-
-        if (bundle.msg && bundle.code != 0) { conn->send(bundle.msg.dump()); }
+        if (!bundle.msg.empty() && bundle.code != 0) {
+            LOG_INFO << "(US) -> " << bundle.msg.dump();
+            conn->send(bundle.msg.dump());
+        }
     }
 }
