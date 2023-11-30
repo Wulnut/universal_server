@@ -43,10 +43,10 @@ void us_server::on_connection(const muduo::net::TcpConnectionPtr& conn)
     }
 }
 
-// -> {code:10006, devId:"xxx-xxx-xxx", time:11234, model:"xxx", game:"xxx", msg:[{name:"xxx",
-// data:"xxx"}]}
-// <- {code:10007, result:0, devId:"xxx-xxx-xxx", time:1234, game:"xxx", msg:[{name:"xxx",
-// data:{index:["x", "y"]}}]}
+// -> {code:10006, sequence:"uuid", devId:"xxx-xxx-xxx", time:11234, model:"xxx", game:"xxx",
+// msg:[{name:"xxx", data:"xxx"}]}
+// <- {code:10007, sequence:"uuid", result:0, devId:"xxx-xxx-xxx", time:1234, game:"xxx",
+// msg:[{name:"xxx", data:{index:["x", "y"]}}]}
 void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net::Buffer* buffer,
                            muduo::Timestamp time)
 {
@@ -66,7 +66,9 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
             return;
         }
 
-        LOG_INFO << "(US) <- " << msg.dump();
+        LOG_INFO << "(US) "
+                 << "[" << pthread_self() << "]"
+                 << " <- " << msg.dump();
 
         _manager.update_timeout(conn);
 
@@ -82,7 +84,9 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
         }
 
         if (!bundle.msg.empty() && bundle.code != 0) {
-            LOG_INFO << "(US) -> " << bundle.msg.dump();
+            LOG_INFO << "(US) "
+                     << "[ " << pthread_self() << " ]"
+                     << " -> " << bundle.msg.dump();
             conn->send(bundle.msg.dump());
         }
     }
