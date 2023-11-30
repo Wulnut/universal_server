@@ -8,6 +8,14 @@
 #ifndef UNIVERSAL_SERVER_COMMON_H
 #define UNIVERSAL_SERVER_COMMON_H
 
+#include <cstring>
+#include <iostream>
+#include <openssl/evp.h>
+#include <string>
+
+std::string base64_encode(const std::string& buffer);
+std::string base64_decode(const std::string& encoded);
+
 typedef enum us_code
 {
     CODE_AUTH = 1000,
