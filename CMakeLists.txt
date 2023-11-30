@@ -32,6 +32,7 @@ add_executable(universal_server
         include/common.h
         include/inactive_conn_mgr.h
         include/redis.h
+        src/common.cc
 )
 
 TARGET_LINK_LIBRARIES(
@@ -39,4 +40,7 @@ TARGET_LINK_LIBRARIES(
         muduo_net
         muduo_base
         pthread
+        hiredis
+        ssl
+        crypto
 )
