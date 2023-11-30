@@ -22,7 +22,7 @@ us_server::us_server(muduo::net::EventLoop* loop, const muduo::net::InetAddress&
 {
     _server.setConnectionCallback(bind(&us_server::on_connection, this, _1));
     _server.setMessageCallback(bind(&us_server::on_message, this, _1, _2, _3));
-    _server.setThreadNum(5);
+    _server.setThreadNum(16);   // No more than twice the CPU core
 }
 
 void us_server::start()
@@ -52,6 +52,7 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
 {
     string      buf    = buffer->retrieveAllAsString();
     us_bundle_t bundle = {0, {{"code", 0}}};
+    _manager.update_timeout(conn);
 
     if (buf.empty()) {
         LOG_ERROR << "Receive message is NULL, connection close";
@@ -70,8 +71,6 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
                  << "[" << pthread_self() << "]"
                  << " <- " << msg.dump();
 
-        _manager.update_timeout(conn);
-
         auto us_handler = us_service::instance()->handler_us_msg(msg["code"].get<int>());
 
         if (us_handler == nullptr) {
@@ -85,7 +84,7 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
 
         if (!bundle.msg.empty() && bundle.code != 0) {
             LOG_INFO << "(US) "
-                     << "[ " << pthread_self() << " ]"
+                     << "[" << pthread_self() << "]"
                      << " -> " << bundle.msg.dump();
             conn->send(bundle.msg.dump());
         }
