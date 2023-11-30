@@ -9,6 +9,7 @@
 #define UNIVERSAL_SERVER_US_SERVICE_H
 
 #include "include/json.hpp"
+#include "include/redis.h"
 #include <functional>
 #include <muduo/base/Logging.h>
 #include <muduo/net/TcpServer.h>
@@ -37,12 +38,15 @@ public:
     void client_close_exception(const muduo::net::TcpConnectionPtr& conn);
     void rest();
 
+    void redis_subscribe_msg_handler(int, const string&);
+
 private:
     us_service();
 
     std::unordered_map<int, us_handle_t>                  _us_handlers;
     std::unordered_map<int, muduo::net::TcpConnectionPtr> _us_users_conn_handlers;
     std::mutex                                            _conn_mutex;
+    redis                                                 _redis;
 };
 
 
