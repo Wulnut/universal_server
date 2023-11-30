@@ -45,6 +45,35 @@ us_handle_t us_service::handler_us_msg(int code)
 void us_service::handler_photo_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp)
 {
     // TODO handler photo
+    int    code = 0;
+    string tmp;
+    string data;
+    string sequence;
+
+    try {
+        code = msg["code"].get<int>();
+    }
+    catch (out_of_range& e) {
+        LOG_ERROR << e.what();
+    }
+
+    try {
+        sequence = msg["sequence"].get<string>();
+    }
+    catch (out_of_range& e) {
+        LOG_ERROR << e.what();
+    }
+
+    try {
+        tmp = msg["data"].get<string>();
+    }
+    catch (out_of_range& e) {
+        LOG_ERROR << e.what();
+    }
+
+    data = base64_decode(tmp);
+
+    _redis.publish(sequence, data);
 }
 
 void us_service::handler_connect_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp)
@@ -66,8 +95,6 @@ void us_service::handler_connect_ack(json& msg, us_bundle_t& bundle, muduo::Time
         LOG_ERROR << e.what();
     }
 
-    LOG_DEBUG << "code: " << code << " data: " << data;
-
     bundle.code        = code + 1;
     bundle.msg["code"] = code + 1;
     bundle.msg["data"] = data;
@@ -83,7 +110,7 @@ void us_service::rest()
     // TODO reset service server
 }
 
-void us_service::redis_subscribe_msg_handler(int, const string&)
+void us_service::redis_subscribe_msg_handler(const string&, const string&)
 {
     // TODO
 }

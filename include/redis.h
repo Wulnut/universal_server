@@ -22,21 +22,21 @@ public:
 
     bool connect();
 
-    bool publish(int sequence, const string& message);
+    bool publish(const string& sequence, const string& message);
 
-    bool subscribe(int sequence);
+    bool subscribe(const string& sequence);
 
-    bool unsubscribe(int sequence);
+    bool unsubscribe(const string& sequence);
 
     void observer_channel_message();
 
-    void init_nofity_handler(function<void(int, string)> nofity_handler);
+    void init_nofity_handler(const function<void(string, string)>& nofity_handler);
 
 private:
     redisContext* _public_context;
     redisContext* _subscribe_context;
 
-    function<void(int, string)> _notify_message_handler;
+    function<void(string, string)> _notify_message_handler;
 };
 
 #endif   // UNIVERSAL_SERVER_REDIS_H
