@@ -17,7 +17,7 @@ inactive_conn_mgr::inactive_conn_mgr(muduo::net::EventLoop* loop, int timeout)
 void inactive_conn_mgr::update_timeout(const muduo::net::TcpConnectionPtr& conn)
 {
     MutexLockGuard lock(_mutex);
-    _active_connections[conn] = _loop->pollReturnTime();
+    _active_connections[conn] = Timestamp::now();
 }
 
 void inactive_conn_mgr::remove_timeout(const muduo::net::TcpConnectionPtr& conn)
