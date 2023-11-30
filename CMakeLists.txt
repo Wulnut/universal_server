@@ -25,11 +25,13 @@ add_executable(universal_server
         src/us_service.cc
         src/us_server.cc
         src/inactive_conn_mgr.cc
+        src/redis.cc
         include/us_server.h
         include/json.hpp
         include/us_service.h
         include/common.h
         include/inactive_conn_mgr.h
+        include/redis.h
 )
 
 TARGET_LINK_LIBRARIES(
