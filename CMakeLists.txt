@@ -43,4 +43,5 @@ TARGET_LINK_LIBRARIES(
         hiredis
         ssl
         crypto
+        uuid
 )

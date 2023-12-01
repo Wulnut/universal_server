@@ -51,3 +51,39 @@ std::string base64_decode(const std::string& encoded)
     BIO_free_all(bio);
     return decoded;
 }
+
+std::string guid_to_string(const GUID& guid)
+{
+    char        buf[64];
+    std::string data;
+    memset(buf, '\0', sizeof(buf));
+
+    snprintf(buf,
+             sizeof(buf),
+             "{%08lX%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X}",
+             guid.Data1,
+             guid.Data2,
+             guid.Data3,
+             guid.Data4[0],
+             guid.Data4[1],
+             guid.Data4[2],
+             guid.Data4[3],
+             guid.Data4[4],
+             guid.Data4[5],
+             guid.Data4[6],
+             guid.Data4[7]);
+
+    data = std::string(buf);
+
+    return data;
+}
+
+std::string uuid_generator()
+{
+    GUID guid;
+    memset(&guid, 0, sizeof(guid));
+
+    uuid_generate(reinterpret_cast<unsigned char*>(&guid));
+
+    return guid_to_string(guid);
+}
