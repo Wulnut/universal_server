@@ -22,19 +22,15 @@ public:
 
     bool connect();
 
-    bool publish(const string& sequence, const string& message);
+    bool set_img(const string& id, const string& message);
 
-    bool subscribe(const string& sequence);
-
-    bool unsubscribe(const string& sequence);
 
     void observer_channel_message();
 
     void init_nofity_handler(const function<void(string, string)>& nofity_handler);
 
 private:
-    redisContext* _public_context;
-    redisContext* _subscribe_context;
+    redisContext* _set_img_context;
 
     function<void(string, string)> _notify_message_handler;
 };

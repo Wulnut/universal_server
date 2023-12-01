@@ -11,39 +11,27 @@
 #include <utility>
 
 redis::redis()
-    : _public_context(nullptr)
-    , _subscribe_context(nullptr)
+    : _set_img_context(nullptr)
 {}
 
 redis::~redis()
 {
-    if (_public_context != nullptr) redisFree(_public_context);
-    if (_subscribe_context != nullptr) redisFree(_subscribe_context);
+    if (_set_img_context != nullptr) redisFree(_set_img_context);
 }
 
 bool redis::connect()
 {
-    _public_context = redisConnect("127.0.0.1", 6379);
+    _set_img_context = redisConnect("127.0.0.1", 6379);
 
-    if (_public_context == nullptr || _public_context->err) {
-        if (_public_context)
-            LOG_ERROR << "Error: " << _public_context->err;
+    if (_set_img_context == nullptr || _set_img_context->err) {
+        if (_set_img_context)
+            LOG_ERROR << "Error: " << _set_img_context->err;
         else
             LOG_ERROR << "Cannot allocate redis context";
 
         return false;
     }
 
-    _subscribe_context = redisConnect("127.0.0.1", 6379);
-
-    if (_subscribe_context == nullptr || _subscribe_context->err) {
-        if (_subscribe_context)
-            LOG_ERROR << "Error: " << _subscribe_context->err;
-        else
-            LOG_ERROR << "Cannot allocate redis context";
-
-        return false;
-    }
 
     thread tid([&]() { observer_channel_message(); });
     tid.detach();
@@ -53,10 +41,10 @@ bool redis::connect()
     return true;
 }
 
-bool redis::publish(const string& sequence, const std::string& message)
+bool redis::set_img(const string& id, const string& message)
 {
-    auto* reply = (redisReply*)redisCommand(
-        _public_context, "Publish %s %s", sequence.c_str(), message.c_str());
+    auto* reply =
+        (redisReply*)redisCommand(_set_img_context, "SET %s %s", id.c_str(), message.c_str());
 
     if (reply == nullptr) {
         LOG_ERROR << "redis publish failed";
@@ -68,49 +56,11 @@ bool redis::publish(const string& sequence, const std::string& message)
     return true;
 }
 
-bool redis::subscribe(const string& sequence)
-{
-    int done = 0;
-
-    if (REDIS_ERR == redisAppendCommand(_subscribe_context, "Subscribe %s", sequence.c_str())) {
-        LOG_ERROR << "redis subscribe failed";
-        return false;
-    }
-
-    while (!done) {
-        if (REDIS_ERR == redisBufferWrite(_subscribe_context, &done)) {
-            LOG_ERROR << "redis subscribe failed";
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool redis::unsubscribe(const string& sequence)
-{
-    int done = 0;
-
-    if (REDIS_ERR == redisAppendCommand(_subscribe_context, "Unsubscribe %d", sequence.c_str())) {
-        LOG_ERROR << "redis unsubscribe failed";
-        return false;
-    }
-
-    while (!done) {
-        if (REDIS_ERR == redisBufferWrite(_subscribe_context, &done)) {
-            LOG_ERROR << "redis subscribe failed";
-            return false;
-        }
-    }
-
-    return true;
-}
-
 void redis::observer_channel_message()
 {
     redisReply* reply = nullptr;
 
-    while (REDIS_OK == redisGetReply(_subscribe_context, (void**)&reply)) {
+    while (REDIS_OK == redisGetReply(_set_img_context, (void**)&reply)) {
         if (reply != nullptr && reply->element[2] != nullptr && reply->element[2]->str != nullptr) {
             // 给业务层上报通道上发生的消息
             _notify_message_handler(reply->element[1]->str, reply->element[2]->str);
