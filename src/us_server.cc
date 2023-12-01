@@ -51,7 +51,7 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
                            muduo::Timestamp time)
 {
     string      buf    = buffer->retrieveAllAsString();
-    us_bundle_t bundle = {0, {{"code", 0}}};
+    us_bundle_t bundle = {nullptr, "", {{"code", 0}}};
     _manager.update_timeout(conn);
 
     if (buf.empty()) {
@@ -75,14 +75,14 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
 
         if (us_handler == nullptr) {
             LOG_ERROR << "Unsupported code: " << RESULT_CANNOT_EXECUTE;
-            bundle.code        = RESULT_CANNOT_EXECUTE;
+            bundle.conn        = conn;
             bundle.msg["code"] = RESULT_CANNOT_EXECUTE;
         }
         else {
             us_handler(msg, bundle, time);
         }
 
-        if (!bundle.msg.empty() && bundle.code != 0) {
+        if (!bundle.msg.empty() && bundle.conn != nullptr) {
             LOG_INFO << "(US) "
                      << "[" << pthread_self() << "]"
                      << " -> " << bundle.msg.dump();

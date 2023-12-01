@@ -11,6 +11,7 @@
 #include "include/json.hpp"
 #include "include/redis.h"
 #include <functional>
+#include <future>
 #include <muduo/base/Logging.h>
 #include <muduo/net/TcpServer.h>
 #include <mutex>
@@ -20,11 +21,13 @@ using json = nlohmann::json;
 
 typedef struct us_bundle
 {
-    int  code;
-    json msg;
+    muduo::net::TcpConnectionPtr conn;
+    string                       sequence;
+    json                         msg;
 } us_bundle_t;
 
 using us_handle_t = std::function<void(json&, us_bundle_t&, muduo::Timestamp)>;
+using yolo_cb     = std::function<void(const us_bundle_t& bundle)>;
 
 class us_service
 {

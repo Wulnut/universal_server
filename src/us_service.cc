@@ -42,13 +42,54 @@ us_handle_t us_service::handler_us_msg(int code)
     }
 }
 
-void us_service::handler_photo_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp)
+static void async_photo_by_yolo_handler(const us_bundle_t& bundle)
+{
+    // TODO
+    if (bundle.conn == nullptr) {
+        LOG_ERROR << "Connection is close";
+        return;
+    }
+
+    json msg;
+    auto get_img = redisConnect("127.0.0.1", 6379);
+
+    if (get_img == nullptr || get_img->err) {
+        if (get_img)
+            LOG_ERROR << get_img->errstr;
+        else
+            LOG_ERROR << "Can not allocate redis context";
+
+        return;
+    }
+
+    msg["sequence"] = uuid_generator();
+    auto reply      = (redisReply*)redisCommand(get_img, "GET %s", bundle.sequence.c_str());
+
+    if (reply == nullptr) {
+        msg["msg"]["data"] = "error";
+        goto err;
+    }
+
+    if (reply->type == REDIS_REPLY_STRING)
+        // TODO reply->str for yolo function
+        ;
+err:
+    freeReplyObject(reply);
+    redisFree(get_img);
+
+    if (!bundle.msg.empty() && bundle.conn != nullptr) {
+        LOG_INFO << "(US) "
+                 << "[" << pthread_self() << "]"
+                 << " -> " << bundle.msg.dump();
+        bundle.conn->send(bundle.msg.dump());
+    }
+}
+
+void us_service::handler_photo_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp time)
 {
     // TODO handler photo
     int    code = 0;
     string tmp;
-    string data;
-    string sequence;
 
     try {
         code = msg["code"].get<int>();
@@ -58,7 +99,7 @@ void us_service::handler_photo_ack(json& msg, us_bundle_t& bundle, muduo::Timest
     }
 
     try {
-        sequence = msg["sequence"].get<string>();
+        bundle.sequence = msg["sequence"].get<string>();
     }
     catch (out_of_range& e) {
         LOG_ERROR << e.what();
@@ -71,9 +112,14 @@ void us_service::handler_photo_ack(json& msg, us_bundle_t& bundle, muduo::Timest
         LOG_ERROR << e.what();
     }
 
-    data = base64_decode(tmp);
+    auto data = base64_decode(tmp);
 
-    _redis.publish(sequence, data);
+    _redis.set_img(bundle.sequence, data);
+
+    std::thread async_yolo(async_photo_by_yolo_handler, bundle);
+    async_yolo.detach();
+
+    bundle.msg["code"] = code + 1;
 }
 
 void us_service::handler_connect_ack(json& msg, us_bundle_t& bundle, muduo::Timestamp)
@@ -95,9 +141,10 @@ void us_service::handler_connect_ack(json& msg, us_bundle_t& bundle, muduo::Time
         LOG_ERROR << e.what();
     }
 
-    bundle.code        = code + 1;
-    bundle.msg["code"] = code + 1;
-    bundle.msg["data"] = data;
+    bundle.msg["code"]        = code + 1;
+    bundle.msg["sequence"]    = msg["sequence"].get<string>();
+    bundle.msg["time"]        = muduo::Timestamp::now().toString();
+    bundle.msg["data"]["msg"] = data;
 }
 
 void us_service::client_close_exception(const TcpConnectionPtr& conn)
