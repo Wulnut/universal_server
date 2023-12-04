@@ -41,8 +41,6 @@ public:
     void client_close_exception(const muduo::net::TcpConnectionPtr& conn);
     void rest();
 
-    void redis_subscribe_msg_handler(const string&, const string&);
-
 private:
     us_service();
 
