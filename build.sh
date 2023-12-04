@@ -19,7 +19,7 @@ if [ ! -d "$REPO_NAME_1" ]; then
     exit 1
 fi
 
-cd $REPO_NAME_2
+cd $REPO_NAME_2 || exit
 
 chmod +x "./build.sh"
 
@@ -33,7 +33,7 @@ if [ ! -d "$REPO_NAME_2" ]; then
     exit 1
 fi
 
-cd $REPO_NAME_2
+cd $REPO_NAME_2 || exit
 
 make && make install
 
