@@ -43,10 +43,6 @@ void us_server::on_connection(const muduo::net::TcpConnectionPtr& conn)
     }
 }
 
-// -> {code:10006, sequence:"uuid", devId:"xxx-xxx-xxx", time:11234, model:"xxx", game:"xxx",
-// msg:[{name:"xxx", data:"xxx"}]}
-// <- {code:10007, sequence:"uuid", result:0, devId:"xxx-xxx-xxx", time:1234, game:"xxx",
-// msg:[{name:"xxx", data:{index:["x", "y"]}}]}
 void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net::Buffer* buffer,
                            muduo::Timestamp time)
 {
