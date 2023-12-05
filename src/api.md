@@ -1,5 +1,9 @@
 # API DOC
 
+## connect interface
+
+> client -> server
+
 ## photo yolo interface
 
 > client -> server
