@@ -4,6 +4,20 @@
 
 > client -> server
 
+```json
+{
+  "code": 1002,
+  "sequence": "uuid",
+  "devId": "xxx-xxx-xxx",
+  "time": "timestamp",
+  "model": "model",
+  "game": "game",
+  "msg": {
+    "data": "xxxxxxxx"
+  }
+}
+```
+
 > server -> client
 
 ## photo yolo interface
