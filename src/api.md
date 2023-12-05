@@ -4,6 +4,8 @@
 
 > client -> server
 
+> server -> client
+
 ## photo yolo interface
 
 > client -> server
