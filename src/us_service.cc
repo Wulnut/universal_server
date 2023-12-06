@@ -18,7 +18,11 @@ us_service::us_service()
     _us_handlers.insert({CODE_CONNECT, bind(&us_service::handler_connect_ack, this, _1, _2, _3)});
     _us_handlers.insert({CODE_PHOTO, bind(&us_service::handler_photo_ack, this, _1, _2, _3)});
 
-    if (_redis.connect()) { LOG_DEBUG << "Redis connect successful"; }
+    if (_redis.connect()) {
+        LOG_DEBUG << "Redis connect successful";
+        _redis.init_nofity_handler(
+            std::bind(&us_service::handle_redis_cache_message, this, _1, _2));
+    }
     else {
         LOG_DEBUG << "Redis connect failed";
     }
@@ -157,4 +161,9 @@ void us_service::client_close_exception(const TcpConnectionPtr& conn)
 void us_service::rest()
 {
     // TODO reset service server
+}
+
+void us_service::handle_redis_cache_message(std::string, std::string)
+{
+    // TODO handle redis cache
 }

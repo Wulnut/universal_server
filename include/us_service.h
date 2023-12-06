@@ -40,6 +40,7 @@ public:
 
     void client_close_exception(const muduo::net::TcpConnectionPtr& conn);
     void rest();
+    void handle_redis_cache_message(string, string);
 
 private:
     us_service();
