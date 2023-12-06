@@ -40,6 +40,7 @@ void us_server::on_connection(const muduo::net::TcpConnectionPtr& conn)
     }
     else {
         _manager.update_timeout(conn);
+        LOG_DEBUG << "connection:" << conn->name();
     }
 }
 
@@ -49,6 +50,7 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
     string      buf    = buffer->retrieveAllAsString();
     us_bundle_t bundle = {nullptr, "", {{"code", 0}}};
     _manager.update_timeout(conn);
+    bundle.conn = conn;
 
     if (buf.empty()) {
         LOG_ERROR << "Receive message is NULL, connection close";
@@ -71,7 +73,6 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
 
         if (us_handler == nullptr) {
             LOG_ERROR << "Unsupported code: " << RESULT_CANNOT_EXECUTE;
-            bundle.conn        = conn;
             bundle.msg["code"] = RESULT_CANNOT_EXECUTE;
         }
         else {
@@ -83,6 +84,11 @@ void us_server::on_message(const muduo::net::TcpConnectionPtr& conn, muduo::net:
                      << "[" << pthread_self() << "]"
                      << " -> " << bundle.msg.dump();
             conn->send(bundle.msg.dump());
+        }
+        else {
+            if (bundle.conn == nullptr) LOG_ERROR << "(US) send error conn is NULL";
+            if (bundle.msg.empty()) LOG_ERROR << "(US) send error msg is NULL";
+            conn->shutdown();
         }
     }
 }
