@@ -10,6 +10,7 @@
 #include "include/json.hpp"
 #include "include/us_service.h"
 #include <iostream>
+#include <sys/sysinfo.h>
 
 using namespace std;
 using namespace placeholders;
@@ -22,7 +23,9 @@ us_server::us_server(muduo::net::EventLoop* loop, const muduo::net::InetAddress&
 {
     _server.setConnectionCallback(bind(&us_server::on_connection, this, _1));
     _server.setMessageCallback(bind(&us_server::on_message, this, _1, _2, _3));
-    _server.setThreadNum(16);   // No more than twice the CPU core
+
+    LOG_DEBUG << "System enable num is " << get_nprocs();
+    _server.setThreadNum(get_nprocs() * 2 - 1);   // No more than twice the CPU core
 }
 
 void us_server::start()
