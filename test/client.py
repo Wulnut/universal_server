@@ -6,6 +6,7 @@ import base64
 import uuid
 import time
 import threading
+import multiprocessing
 
 host = "127.0.0.1"
 port = 6000
@@ -25,18 +26,20 @@ def tcp_conn(i):
     sequence = generator_uuid()
     times = time.time()
 
-    str = "universal_server"
+    data = "universal server"
+    byte_string = data.encode("utf-8")
+    base64_encoded = base64.b64encode(byte_string).decode("utf-8")
 
     send = {
         "code":1002,
         "sequence": sequence,
-        "time": times,
-        "data": str
+        "time": str(times),
+        "data": base64_encoded
     }
 
     json_object = json.dumps(send, indent = 4)
 
-    for i in range(10000):
+    for i in range(1):
         client.send(json_object.encode("utf-8"))
         msg = client.recv(1024)
         print("receive: ", msg.decode("utf-8"))
@@ -49,7 +52,7 @@ def worker(thread_id):
 
 if __name__ == '__main__':
 
-    num_threads = 10
+    num_threads = multiprocessing.cpu_count() * 2
     threads = []
 
     for i in range(num_threads):
