@@ -132,6 +132,7 @@ void us_service::handler_connect_ack(json& msg, us_bundle_t& bundle, muduo::Time
 {
     int    code = 0;
     string data;
+    string base64;
 
     try {
         code = msg["code"].get<int>();
@@ -141,7 +142,8 @@ void us_service::handler_connect_ack(json& msg, us_bundle_t& bundle, muduo::Time
     }
 
     try {
-        data = msg["data"].get<string>();
+        data   = msg["data"].get<string>();
+        base64 = base64_decode(data);
     }
     catch (out_of_range& e) {
         LOG_ERROR << e.what();
@@ -150,7 +152,7 @@ void us_service::handler_connect_ack(json& msg, us_bundle_t& bundle, muduo::Time
     bundle.msg["code"]        = code + 1;
     bundle.msg["sequence"]    = msg["sequence"].get<string>();
     bundle.msg["time"]        = muduo::Timestamp::now().toString();
-    bundle.msg["data"]["msg"] = data;
+    bundle.msg["data"]["msg"] = base64;
 }
 
 void us_service::client_close_exception(const TcpConnectionPtr& conn)
